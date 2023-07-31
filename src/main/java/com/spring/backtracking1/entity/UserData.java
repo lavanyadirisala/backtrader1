@@ -17,41 +17,51 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import org.springframework.security.core.GrantedAuthority;
+
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
-@Data
+@Setter
+@Getter
 @AllArgsConstructor
 @NoArgsConstructor
+
 @Table(name = "Users")
-public class UserData implements Serializable{
-	
+public class UserData implements Serializable {
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.SEQUENCE)
-	private int id;	
-	
-	@NotNull
-	private String firstName;
-	
-	@NotNull
-	private String lastName;
-		
+	private int id;
+
+	@Column(nullable = false)
+	private String firstname;
+
+	@Column(nullable = false)
+	private String lastname;
+
 	@Email(message = "Please provide a valid e-mail")
-	@Column(name = "Email",nullable = false)
+	@Column(name = "Email", nullable = false)
 	@NotBlank(message = "Email is mandatory")
 	private String email;
-	
+
 	@Column(nullable = false)
 	private String password;
-	
-	
-	@ManyToMany(fetch = FetchType.EAGER,cascade = CascadeType.ALL)
-	    @JoinTable(name="user_roles",
-	    joinColumns = {@JoinColumn(name="user_id", referencedColumnName="id")},
-	    inverseJoinColumns = {@JoinColumn(name="role_id", referencedColumnName="id")})
-		private List<Roles>roles=new ArrayList<>();
+
+	@Nonnull
+	@Column(length = 10)
+	private long phone;
+
+	@ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+	@JoinTable(name = "user_roles", joinColumns = {
+			@JoinColumn(name = "user_id", referencedColumnName = "id") }, inverseJoinColumns = {
+					@JoinColumn(name = "role_id", referencedColumnName = "id") })
+	private List<Roles> roles = new ArrayList<>();
+
 }

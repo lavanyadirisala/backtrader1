@@ -31,6 +31,8 @@ public class ForgotPasswordToken {
     @OneToOne(targetEntity = UserData.class, fetch = FetchType.EAGER)
     @JoinColumn(nullable=false, name="user_id", referencedColumnName="id")
 	private UserData User;
+
+	
 	
 	
 }

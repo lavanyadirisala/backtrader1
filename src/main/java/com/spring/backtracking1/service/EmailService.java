@@ -38,6 +38,7 @@ public class EmailService {
 
 		// Catch block to handle the exceptions
 		catch (Exception e) {
+			System.out.println(e.getMessage());
 			return "Error while Sending Mail";
 		}
 	}
