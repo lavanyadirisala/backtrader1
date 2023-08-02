@@ -1,7 +1,12 @@
 package com.spring.backtracking1.controller;
 
 import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -39,6 +44,8 @@ public class UserController {
 	@Autowired
 	private JwtUtil jwtutil;
 
+	 Logger logger = LoggerFactory.getLogger(UserController.class);
+
 	@PostMapping("/adminsignup")
 	public ResponseEntity<String> createAdmin(@Valid @RequestBody UserData userData, @RequestParam String token ){
 		String result = userservice.createAdmin(userData,token);
@@ -56,24 +63,25 @@ public class UserController {
 	}
 	
 	
-	@PostMapping("/login")
-	public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
+	@PostMapping(value = "/login", consumes = MediaType.APPLICATION_JSON_VALUE)
+
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest authRequest) {
 		LoginResponse response = null;
-		Authentication authentication = authenticationManager.authenticate(
-				new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
-		SecurityContextHolder.getContext().setAuthentication(authentication);
-		if(authentication!=null) {
-		UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-		System.out.println(userDetails);
-		// create JWT token
-		String token = jwtutil.generateJwtToken(userDetails.getUsername());
-		System.out.print(token);
-		List<String> roles = userDetails.getAuthorities().stream().map(list -> list.getAuthority()).toList();
-		response = new LoginResponse( token,roles,userDetails.getUsername());
-		return ResponseEntity.ok(response);
-		}
-		return ResponseEntity.ok(null);
-	}
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(authRequest.getEmail(), authRequest.getPassword()));
+        if (authentication != null) {
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            String token = jwtutil.generateJwtToken(userDetails.getUsername());
+            List<String> roles = userDetails.getAuthorities().stream().map(list -> list.getAuthority()).toList();
+            response = new LoginResponse(token , jwtutil.getUserNameFromToken(token), roles);
+            logger.info("User has been logged in with the user email {}",userDetails.getUsername());
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } else {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+        }
+
+    }
 
 	@PostMapping("/forgot-password")
 	public ResponseEntity<String> forgotpassword(@RequestParam String email) {

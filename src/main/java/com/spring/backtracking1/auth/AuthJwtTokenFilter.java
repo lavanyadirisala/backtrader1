@@ -1,5 +1,4 @@
-package com.spring.backtracking1.auth;
-import java.io.IOException;
+package com.spring.backtracking1.auth;import java.io.IOException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -16,18 +15,16 @@ import jakarta.servlet.http.HttpServletResponse;
 @Component
 public class AuthJwtTokenFilter extends OncePerRequestFilter {
     @Autowired
-    private JwtUtil jwtutil;
+    private JwtUtil jwtToken;
     @Autowired
     private UserService service;
-
- 
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         String token = this.splitToken(request);
-        if (token != null && jwtutil.validateJwtToken(token)) {
-            String username = jwtutil.getUserNameFromToken(token);
+        if (token != null && jwtToken.validateJwtToken(token)) {
+            String username = jwtToken.getUserNameFromToken(token);
             UserDetails details = service.loadUserByUsername(username);
             UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(details,
                     null, details.getAuthorities());
@@ -35,9 +32,7 @@ public class AuthJwtTokenFilter extends OncePerRequestFilter {
         }
         filterChain.doFilter(request, response);
 
- 
     }
-
     public String splitToken(HttpServletRequest request) {
         String token = null;
         String header = request.getHeader("Authorization");

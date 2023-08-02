@@ -31,7 +31,7 @@ public class BuySellStockController {
 	@PostMapping("/sell")
 	public ResponseEntity<String> sellStock(Authentication authentication,@RequestParam String symbol, @RequestParam int quantity) throws RestClientException, IOException, InterruptedException {
 		 	
-		return ResponseEntity.ok(buysellService.sellStock(authentication,symbol,quantity));
+		return buysellService.sellStock(authentication,symbol,quantity);
 	
 	}
 	

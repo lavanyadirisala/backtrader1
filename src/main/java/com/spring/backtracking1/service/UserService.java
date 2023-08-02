@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -28,10 +29,12 @@ import com.spring.backtracking1.entity.Roles;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserService implements UserDetailsService {
+	
 	@Value("${app.pwdresetExpire}")
 	private long expTime;
 	BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
+	ForgotPasswordToken pwdtoken = new ForgotPasswordToken();
 	private UserRepository userRepo;
 	
 	@Autowired
@@ -42,18 +45,20 @@ public class UserService implements UserDetailsService {
 	private ForgotPasswordTokenRepository forgotpwdrepo;
 
 	@Autowired
+	@Lazy
 	private JwtUtil jwtutil;
 
 	 Logger logger = LoggerFactory.getLogger(UserService.class);
 	public String createAdmin(UserData admindata, String token) {
+		
 		/*
 		 * Collection<? extends GrantedAuthority> authorities =
 		 * authentication.getAuthorities();
 		 * 
 		 * List<String> roles = new ArrayList<>(); for (GrantedAuthority authority :
 		 * authorities) { roles.add(authority.getAuthority()); }
-		 */		
-		
+		 */			
+		token = token.substring(7);
 		String gmail = jwtutil.getUserNameFromToken(token);
 		UserDetails user = loadUserByUsername(gmail);
 		//if (roles.contains("ADMIN")) {
@@ -113,13 +118,11 @@ public class UserService implements UserDetailsService {
 		UserData user = userRepo.findByEmail(email);
 		String token = UUID.randomUUID().toString();
 		if (user != null) {
-			ForgotPasswordToken pwdtoken = new ForgotPasswordToken();
 			pwdtoken.setCreatedTime(new Date(System.currentTimeMillis()).getTime());
 			pwdtoken.setToken(token);
 			pwdtoken.setUser(user);
 			forgotpwdrepo.save(pwdtoken);
 			System.out.println(pwdtoken);
-			//logger.info("MAIL_IS_SENT!RESET_YOUR_PASSWORD");
 			return true;
 		} else {
 			logger.warn("NO_USER_FOUND_WITH_MAILID");

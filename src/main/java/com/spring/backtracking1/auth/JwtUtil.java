@@ -1,75 +1,55 @@
 package com.spring.backtracking1.auth;
+
 import java.util.Date;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
-
 import com.spring.backtracking1.entity.UserData;
 import com.spring.backtracking1.service.UserService;
-
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 
-
 @Component
-
 public class JwtUtil {
+	@Value("${app.jwtExpiration")
+	private String expiration;	
+	@Value("${app.key}")
+	private String key;
+	@Autowired
+	private UserService userService;
+	public String generateJwtToken(String email) {
 
-    long expDate = 30000;
+		UserDetails details = userService.loadUserByUsername(email);
 
-    @Value("${app.jwtSecret}")
+		UserData users = userService.findByEmail(email);
 
-    private String key;
+		return Jwts.builder().setSubject(details.getUsername()).setIssuedAt(new Date()).claim("phone", users.getPhone())
 
-    @Autowired
-    @Lazy
-    private UserService userService;
+				.claim("firstname", users.getFirstname())
 
-     public String generateJwtToken(String email) {
+				.claim("lastname", users.getLastname())
 
-        UserDetails details = userService.loadUserByUsername(email);
-        UserData  users = userService.findByEmail(email);
+				.claim("roles", users.getRoles())
 
-        return Jwts.builder().setSubject(details.getUsername()).setIssuedAt(new Date()).claim("phone", users.getPhone())
+				.signWith(SignatureAlgorithm.HS256, key.getBytes()).compact();
 
-                .claim("firstname", users.getFirstname())
+	}
 
-                .claim("lastname", users.getLastname())
+	public String getUserNameFromToken(String token) {
+		return Jwts.parser().setSigningKey(key.getBytes()).parseClaimsJws(token).getBody().getSubject();
 
-                .claim("roles", users.getRoles())
+	}
 
-                .signWith(SignatureAlgorithm.HS256, key.getBytes()).compact();
+	public boolean isTokenExpired(String authToken) {
+		return Jwts.parser().setSigningKey(key.getBytes()).parseClaimsJws(authToken).getBody().getExpiration()
+				.before(new Date(System.currentTimeMillis()));
 
-    }
+	}
 
- 
+	public boolean validateJwtToken(String authToken) {
+		return (getUserNameFromToken(authToken) != null);
 
-    public String getUserNameFromToken(String token) {
-
-        return Jwts.parser().setSigningKey(key.getBytes()).parseClaimsJws(token).getBody().getSubject();
-
-    }
-
- 
-
-    public boolean isTokenExpired(String authToken) {
-
-        return Jwts.parser().setSigningKey(key.getBytes()).parseClaimsJws(authToken).getBody().getExpiration()
-
-                .before(new Date(System.currentTimeMillis()));
-
-    }
-
- 
-
-    public boolean validateJwtToken(String authToken) {
-
-        return (getUserNameFromToken(authToken) != null);
-
-    }
-
- 
+	}
 
 }

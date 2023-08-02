@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.beans.factory.annotation.Value;
-
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import org.springframework.security.core.Authentication;
@@ -74,7 +74,7 @@ public class BuySellStockService {
 
 	}
 
-	public String sellStock(Authentication authentication, String symbol, int quantity)
+	public ResponseEntity<String> sellStock(Authentication authentication, String symbol, int quantity)
 			throws RestClientException, IOException, InterruptedException {
 		UserData userData = userRepo.findByEmail(authentication.getName());
 		logger.info("USER {} IS SELLING STOCKS OF {}  OF QUANTITY {} ", userData.getId(), symbol,  quantity);
@@ -107,10 +107,11 @@ public class BuySellStockService {
 			newOrder.setUser(userData);
 			newOrder.setStatus("OPEN");
 			orderRepo.save(newOrder);
-			return "SOLD_STOCK";
+			return ResponseEntity.status(HttpStatus.ACCEPTED).body("SOLD_STOCK");
+			
 		}
 		logger.info("USER {} HAVE TROUBLE SELLING STOCK", userData.getId());
-		return "USER_DON'T_HAVE_ENOUGH_QUANTITY_TO_SELL or NO_STOCK_BROUGHT_BY_THIS_USER";
+		return ResponseEntity.status(HttpStatus.FORBIDDEN).body("USER_DON'T_HAVE_ENOUGH_QUANTITY_TO_SELL or NO_STOCK_BROUGHT_BY_THIS_USER");
 	}
 
 	public String buyStock(Authentication authentication, String symbol, double price, int quantity) {
